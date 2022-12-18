@@ -1,0 +1,72 @@
+def JKUBE_SERVICES = ["md-programevent-dashboard-service", "md-insights-dashboard-service"]
+
+def SERVICES_VERSIONS = []
+
+pipeline {
+  agent any
+  stages {
+
+    stage('Checkout Source') {
+      steps {
+        git(
+            url: "${params.PROJECT_REPO}",
+            branch: "${params.REPO_BRANCH}",
+            credentialsId: "mediadistillery-release"
+        )
+      }
+    }
+
+    stage('Build repository') {
+      steps {
+        sh 'mvn -B -DexcludedGroups="integration" clean install'
+      }
+    }
+
+    stage('Publish jars ') {
+      steps {
+        sh "mvn -B deploy -DSkipTests -Dmaven.test.skip=true -Dmaven.install.skip=true"
+      }
+    }
+
+    stage('JKube Services') {
+      steps {
+        script {
+          for (fsvc in JKUBE_SERVICES) {
+            dir("${fsvc}"){
+              println "fabricating with Jkube ${fsvc}"
+              sh "mvn -B install -DSkipTests -Dmaven.test.skip=true k8s:push helm:upload -Pkubernetes"
+              version = sh(script: "cat target/classes/cicd-version.properties",returnStdout: true)
+              SERVICES_VERSIONS.push("${fsvc},${version}")
+              println "services to deploy ${SERVICES_VERSIONS}"
+            }
+          }
+        }
+      }
+    }
+
+    stage('Trigger Deployment') {
+        steps {
+            script{
+                if((env.AUTO_DEPLOY == '1' || params.AUTO_DEPLOY == '1') && params.DEPLOY_JOB){
+                    def deployJobParams = params.collect{
+                        text(name: "SERVICES_VERSIONS", value: SERVICES_VERSIONS.join('\n'))
+                    }
+
+                    build job: "${params.DEPLOY_JOB}", parameters: deployJobParams, wait: false
+                }else{
+                    println "skipping deployment"
+                }
+            }
+        }
+    }
+  }
+  post {
+    success {
+        slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME}' (${env.BUILD_URL}) \n ${SERVICES_VERSIONS}")
+
+    }
+    failure {
+        slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME}' (${env.BUILD_URL})")
+    }
+  }
+}

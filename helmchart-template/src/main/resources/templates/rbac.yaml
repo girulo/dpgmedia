@@ -1,0 +1,50 @@
+{{- if .Values.clustering.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.clustering.accountName }}
+rules:
+- apiGroups: [""]
+  resources:
+  - services
+  - endpoints
+  verbs: ["get", "list", "watch", "update"]
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+{{- with .Values.extraPermissions }}
+{{- toYaml . | nindent 0 }}
+{{- end }}
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.clustering.accountName }}
+  {{- if .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  {{- else }}
+  namespace: default
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.clustering.accountName }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.clustering.accountName }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.clustering.accountName }}
+  {{- if .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  {{- else }}
+  namespace: default
+  {{- end }}
+{{- end }}

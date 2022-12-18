@@ -1,0 +1,38 @@
+def JKUBE_SERVICES = []
+def SERVICES_VERSIONS = []
+pipeline {
+  agent any
+  stages {
+
+    stage('Checkout Source') {
+      steps {
+        git(
+            url: "${params.PROJECT_REPO}",
+            branch: "${params.REPO_BRANCH}",
+            credentialsId: "user-credentials"
+        )
+      }
+    }
+
+    stage('Build repository') {
+      steps {
+        sh 'mvn -B -DexcludedGroups="integration" clean install'
+      }
+    }
+
+    stage('Publish jars ') {
+      steps {
+        sh "mvn -B deploy -DSkipTests -Dmaven.test.skip=true -Dmaven.install.skip=true"
+      }
+    }
+  }
+  post {
+    success {
+        slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME}' (${env.BUILD_URL}) \n ${SERVICES_VERSIONS}")
+
+    }
+    failure {
+        slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME}' (${env.BUILD_URL})")
+    }
+  }
+}

@@ -1,0 +1,73 @@
+# Default values for @project.artifactId@.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: giru
+  tag: @project.artifactId@:@docker.tag@
+  pullPolicy: Always
+
+nameOverride: ""
+fullnameOverride: ""
+
+probe:
+  endpoint: /actuator/health
+  port: 8080
+  delay: 90
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: @project.artifactId@
+      paths: []
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  limits:
+    memory: 1Gi
+    cpu: "2"
+  requests:
+    cpu: "1"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+#hosts:
+#  - ip: "127.0.0.1"
+#    hostnames:
+#    - "foo.local"
+
+#
+# Clustering
+# Please update the accountname to be unique
+#
+clustering:
+  accountName: clusteringaccountname
+  enabled: false
+
+extraPermissions: []
+
+secrets: []
+
+spreadConstraint:
+  enabled: false
+  maxSkew: 1
+  topologyKey: node
+  whenUnsatisfiable: ScheduleAnyway
+

@@ -13,6 +13,11 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>dpgmedia</name>
     <description>Demo project for Spring Boot</description>
+
+    <modules>
+        <module>helmchart-template</module>
+    </modules>
+
     <properties>
         <java.version>1.8</java.version>
         <kotlin.version>1.6.21</kotlin.version>
@@ -66,14 +71,6 @@
 <!--            <scope>runtime</scope>-->
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
-<!--        <dependency>-->
-<!--            <groupId>io.swagger.core.v3</groupId>-->
-<!--            <artifactId>swagger-annotations</artifactId>-->
-<!--            <version>2.2.7</version>-->
-<!--        </dependency>-->
-
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -82,9 +79,40 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources/</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/generated-resources</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>${basedir}/src/main/version/</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <delimiters>
+                        <delimiter>@</delimiter>
+                    </delimiters>
+                    <useDefaultDelimiters>false</useDefaultDelimiters>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -110,5 +138,134 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>kubernetes</id>
+            <properties>
+                <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+                <packaging.type>jar</packaging.type>
+                <jkube.rolling>true</jkube.rolling>
+                <jkube.generator.name>giru/${project.artifactId}:${docker.tag}</jkube.generator.name>
+                <jkube.recreate>true</jkube.recreate>
+                <docker.tag>${project.version}.${maven.build.timestamp}</docker.tag>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.eclipse.jkube</groupId>
+                        <artifactId>kubernetes-maven-plugin</artifactId>
+                        <version>1.0.0-rc-1</version>
+                        <executions>
+                            <execution>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>resource</goal>
+                                    <goal>helm</goal>
+                                    <goal>build</goal>
+                                    <goal>push</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.kiwigrid</groupId>
+                        <artifactId>helm-maven-plugin</artifactId>
+                        <version>${helm.maven.version}</version>
+                        <configuration>
+                            <chartVersion>${docker.tag}</chartVersion>
+                            <chartDirectory>${project.basedir}</chartDirectory>
+                            <uploadRepoSnapshot>
+                                <name>snapshot-repo</name>
+                                <type>CHARTMUSEUM</type>
+                                <url>http://your-chartmuseum-server/api/charts</url>
+                            </uploadRepoSnapshot>
+                            <uploadRepoStable>
+                                <name>stable-repo</name>
+                                <type>CHARTMUSEUM</type>
+                                <url>http://your-chartmuseum-server/api/charts</url>
+                            </uploadRepoStable>
+                            <useLocalHelmBinary>true</useLocalHelmBinary>
+                            <chartDirectory>${project.basedir}/target/classes/${project.artifactId}</chartDirectory>
+                            <appVersion>${project.version}</appVersion>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>upload</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <id>unpack</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>unpack</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>com.example</groupId>
+                                            <artifactId>helmchart-template</artifactId>
+                                            <type>jar</type>
+                                            <overWrite>false</overWrite>
+                                            <outputDirectory>src/main/generated-resources/${project.artifactId}</outputDirectory>
+                                            <includes>**/*.yaml,**/*.tpl,**/*.txt</includes>
+                                            <excludes>**/values.yaml</excludes>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>    </profiles>
+
+    <scm>
+        <connection>scm:git:ssh://git@github.com:girulo/dpgmedia.git</connection>
+        <url>scm:git:ssh://git@git@github.com:girulo/dpgmedia.git</url>
+        <tag>{project.version}</tag>
+    </scm>
+
+
+    <repositories>
+        <repository>
+            <id>maven-repo</id>
+            <url>http://your-maven-repo</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>nexus3-snapshots</id>
+            <url>http://your-nexus3-server/repository/maven-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus3-releases</id>
+            <url>http://your-nexus3-server/repository/maven-releases/</url>
+        </repository>
+    </distributionManagement>
 
 </project>
