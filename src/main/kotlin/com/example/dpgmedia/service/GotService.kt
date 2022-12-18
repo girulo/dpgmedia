@@ -16,6 +16,7 @@ class GotService(
         const val GOT_CHARACTERS_URL = "/Characters"
         const val V2 = "/v2"
         const val V1 = "/v1"
+        const val URL_SEPARATOR = "/"
     }
 
     fun getAllContinents(apiVersion: Int): List<Continent> {
@@ -40,11 +41,11 @@ class GotService(
     }
 
     fun searchCharactersByFamilyName(apiVersion: Int, familyName: String): List<Character> {
-        return getAllCharacters(apiVersion).filter { character -> character.family == familyName }.toList()
+        return getAllCharacters(apiVersion).filter { character -> character.family == familyName }
     }
 
     fun findCharacterById(apiVersion: Int, id: Int): Character? {
-        val response = restTemplate.getForEntity(generateUrl(apiVersion, GOT_CHARACTERS_URL.plus(id)), Character::class.java)
+        val response = restTemplate.getForEntity(generateUrl(apiVersion, GOT_CHARACTERS_URL.plus(URL_SEPARATOR).plus(id)), Character::class.java)
         return when (response.statusCode.is2xxSuccessful) {
             true -> response.body!!
             false -> null

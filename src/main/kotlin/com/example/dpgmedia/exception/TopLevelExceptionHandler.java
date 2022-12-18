@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -23,6 +24,12 @@ public class TopLevelExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = ServletException.class)
     public ErrorResponse handleServletException(final ServletException e) {
+        return wrap(ErrorId.BAD_REQUEST.getErrorId(), e, e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(value = HttpClientErrorException.class)
+    public ErrorResponse handleServletException(final HttpClientErrorException e) {
         return wrap(ErrorId.BAD_REQUEST.getErrorId(), e, e.getMessage());
     }
 

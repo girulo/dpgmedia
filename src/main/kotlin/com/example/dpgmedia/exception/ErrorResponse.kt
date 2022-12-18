@@ -5,6 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 
 class ErrorResponse @JsonCreator constructor(
-    @JsonProperty("errorId") var errorId: Int,
-    @JsonProperty("errorMessage") errorMessage: String = "Internal server error. Check the logs for details."
+    var errorId: Int,
+    var errorMessage: String = "Internal server error. Check the logs for details."
 )

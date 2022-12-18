@@ -31,12 +31,14 @@ class GotController(
     fun postCharacter(@PathVariable version: Int, @RequestBody character: Character): ResponseEntity<Boolean> {
 
         val success = gotService.postCharacter(version, character)
-        return ResponseEntity.ok(success)
+        return if (success)
+            ResponseEntity.ok(success)
+        else
+            ResponseEntity.internalServerError().build()
     }
 
     @GetMapping("/characters/{id}")
-    fun findCharacterById(@PathVariable version: Int,
-                          @PathVariable id: Int): ResponseEntity<Character> {
+    fun findCharacterById(@PathVariable version: Int, @PathVariable id: Int): ResponseEntity<Character> {
 
         val character = gotService.findCharacterById(version, id)
         return ResponseEntity.ok(character)
@@ -50,8 +52,7 @@ class GotController(
     }
 
     @GetMapping("/characters/search")
-    fun searchCharactersByFamilyName(@PathVariable version: Int,
-                                     @RequestParam(required = false) familyName: String): ResponseEntity<List<Character>> {
+    fun searchCharactersByFamilyName(@PathVariable version: Int, @RequestParam(required = false) familyName: String): ResponseEntity<List<Character>> {
 
         val charactersByFamilyName = gotService.searchCharactersByFamilyName(version, familyName)
         return ResponseEntity.ok(charactersByFamilyName)
