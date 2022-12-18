@@ -52,7 +52,7 @@ class GotController(
             ApiResponse(responseCode = "500", description = "Any internal server error"),
         ]
     )
-    @PostMapping("/characters")
+    @PostMapping("/characters", consumes = ["application/json"])
     fun postCharacter(@PathVariable version: Int, @RequestBody character: Character): ResponseEntity<Boolean> {
 
         val success = gotService.postCharacter(version, character)
@@ -70,7 +70,7 @@ class GotController(
             ApiResponse(responseCode = "500", description = "Any internal server error"),
         ]
     )
-    @GetMapping("/characters/{id}")
+    @GetMapping("/characters/{id}", produces = ["application/json"])
     fun findCharacterById(@PathVariable version: Int, @PathVariable id: Int): ResponseEntity<Character> {
 
         val character = gotService.findCharacterById(version, id)
@@ -84,7 +84,7 @@ class GotController(
             ApiResponse(responseCode = "500", description = "Any internal server error"),
         ]
     )
-    @GetMapping("/shallow/characters")
+    @GetMapping("/shallow/characters", produces = ["application/json"])
     fun getAllShallowCharacters(@PathVariable version: Int): ResponseEntity<List<ShallowCharacter>> {
 
         val allShallowCharacters = gotService.getAllShallowCharacters(version)
@@ -98,7 +98,7 @@ class GotController(
             ApiResponse(responseCode = "500", description = "Any internal server error"),
         ]
     )
-    @GetMapping("/characters/search")
+    @GetMapping("/characters/search", produces = ["application/json"])
     fun searchCharactersByFamilyName(@PathVariable version: Int,
                                      @RequestParam @Parameter(description = "The family name of a character") familyName: String): ResponseEntity<List<Character>> {
 
