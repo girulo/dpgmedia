@@ -1,8 +1,6 @@
 package com.example.dpgmedia.config
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import org.springframework.beans.factory.BeanInitializationException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -20,7 +18,7 @@ class AppConfig {
     @Value("\${demo.base.url}")
     private val demoBaseUrl: String? = null
 
-    //RestTemplate modify with a base url to call only GOT API
+    //RestTemplate modified with a base url to call only GOT API. Not the best for a normal service, but perfect for this assignment
     @Bean
     fun restTemplate(builder: RestTemplateBuilder): RestTemplate {
         if (isNull(demoBaseUrl)) {
@@ -30,7 +28,7 @@ class AppConfig {
             .setConnectTimeout(Duration.ofSeconds(10))
             .build();
     }
-    //Changed Strategy to adapt to GOT API
+    //Changed JSON Strategy to adapt to the GOT API data objects
     @Bean fun jackson2ObjectMapperBuilder(): Jackson2ObjectMapperBuilder? {
         return Jackson2ObjectMapperBuilder().propertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
     }

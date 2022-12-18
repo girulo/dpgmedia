@@ -1,1 +1,2 @@
-# dpgmedia
+# DPG Media Coding Test
+
