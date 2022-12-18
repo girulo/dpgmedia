@@ -3,6 +3,7 @@ package com.example.dpgmedia.service
 import com.example.dpgmedia.model.Character
 import com.example.dpgmedia.model.Continent
 import com.example.dpgmedia.model.ShallowCharacter
+import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -11,6 +12,8 @@ class GotService(
     private var restTemplate: RestTemplate
 
 ) {
+    private val LOG = LogManager.getLogger(GotService::class)
+
     companion object {
         const val GOT_CONTINENTS_URL = "/Continents"
         const val GOT_CHARACTERS_URL = "/Characters"
@@ -20,32 +23,54 @@ class GotService(
     }
 
     fun getAllContinents(apiVersion: Int): List<Continent> {
-        val response = restTemplate.getForEntity(generateUrl(apiVersion, GOT_CONTINENTS_URL), Array<Continent>::class.java)
+        val url = generateUrl(apiVersion, GOT_CONTINENTS_URL)
+        LOG.info("Requesting all Continents from {}", url)
+        val response = restTemplate.getForEntity(url, Array<Continent>::class.java)
         return when (response.statusCode.is2xxSuccessful) {
-            true -> response.body!!.asList()
-            false -> emptyList()
+            true -> {
+                LOG.info("Fetched {} Continents", response.body!!.size)
+                response.body!!.asList()
+            }
+            false -> {
+                LOG.error("The request to GOT API failed")
+                emptyList()
+            }
+            
         }
     }
 
     fun getAllCharacters(apiVersion: Int): List<Character> {
-        val response = restTemplate.getForEntity(generateUrl(apiVersion, GOT_CHARACTERS_URL), Array<Character>::class.java)
+        val url = generateUrl(apiVersion, GOT_CHARACTERS_URL)
+        LOG.info("Requesting all Characters from {}", url)
+        val response = restTemplate.getForEntity(url, Array<Character>::class.java)
         return when (response.statusCode.is2xxSuccessful) {
-            true -> response.body!!.asList()
-            false -> emptyList()
+            true -> {
+                LOG.info("Fetched {} Characters", response.body!!.size)
+                response.body!!.asList()
+            }
+            false -> {
+                LOG.error("The request to GOT API failed")
+                emptyList()
+            }
         }
     }
 
     fun getAllShallowCharacters(apiVersion: Int): List<ShallowCharacter> {
-        return getAllCharacters(apiVersion).map { character -> ShallowCharacter.fromCharacter(character) }.toList()
+        LOG.info("Requesting a shallow version of Characters")
+        return getAllCharacters(apiVersion).map { character -> ShallowCharacter.fromCharacter(character) }
 
     }
 
     fun searchCharactersByFamilyName(apiVersion: Int, familyName: String): List<Character> {
-        return getAllCharacters(apiVersion).filter { character -> character.family == familyName }
+        val filteredCharacters = getAllCharacters(apiVersion).filter { character -> character.family == familyName }
+        LOG.info("Found {} member for the family {}", filteredCharacters.size, familyName)
+        return filteredCharacters
     }
 
     fun findCharacterById(apiVersion: Int, id: Int): Character? {
-        val response = restTemplate.getForEntity(generateUrl(apiVersion, GOT_CHARACTERS_URL.plus(URL_SEPARATOR).plus(id)), Character::class.java)
+        val url = generateUrl(apiVersion, GOT_CHARACTERS_URL.plus(URL_SEPARATOR).plus(id))
+        LOG.info("Requesting Character with id: {} from {}", id, url)
+        val response = restTemplate.getForEntity(url, Character::class.java)
         return when (response.statusCode.is2xxSuccessful) {
             true -> response.body!!
             false -> null
@@ -53,8 +78,15 @@ class GotService(
     }
 
     fun postCharacter(apiVersion: Int, character: Character): Boolean {
-        val response = restTemplate.postForEntity(generateUrl(apiVersion, GOT_CHARACTERS_URL), character, Character::class.java)
-        return response.statusCode.is2xxSuccessful
+        val url = generateUrl(apiVersion, GOT_CHARACTERS_URL)
+        LOG.info("Posting Character {} to {}", character, url)
+        val response = restTemplate.postForEntity(url, character, Character::class.java)
+        val success = response.statusCode.is2xxSuccessful
+        if (success)
+            LOG.info("New character posted successfully")
+        else
+            LOG.error("Some error happened when posting the new characters")
+        return success
     }
 
     private fun generateUrl(apiVersion: Int, endPoint: String): String {
