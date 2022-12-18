@@ -22,5 +22,6 @@
 
 - I have implemented validation for API in the Controller forcing it to be from 0 till 2 since I have realized that the GOT API have them available
 
+- Added helmchart-template.jar in the resources folder to have the appropiate template to create a good hel chart for this app
 
 
