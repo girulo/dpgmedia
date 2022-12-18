@@ -14,9 +14,9 @@
     <name>dpgmedia</name>
     <description>Coding Test for DPG Media</description>
 
-<!--    <modules>-->
-<!--        <module>helmchart-template</module>-->
-<!--    </modules>-->
+    <!--    <modules>-->
+    <!--        <module>helmchart-template</module>-->
+    <!--    </modules>-->
 
     <properties>
         <java.version>1.8</java.version>
@@ -24,6 +24,7 @@
         <open.api.version>1.6.14</open.api.version>
         <testng.version>7.0.0</testng.version>
         <mockito-kotlin.version>4.1.0</mockito-kotlin.version>
+        <helm-maven-plugin.version>4.2</helm-maven-plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -70,7 +71,7 @@
             <version>${open.api.version}</version>
         </dependency>
 
-<!--        For Testing-->
+        <!--        For Testing-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -173,7 +174,7 @@
             <id>kubernetes</id>
             <properties>
                 <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
-<!--                <packaging.type>jar</packaging.type>-->
+                <!--                <packaging.type>jar</packaging.type>-->
                 <jkube.rolling>true</jkube.rolling>
                 <jkube.generator.name>giru/${project.artifactId}:${docker.tag}</jkube.generator.name>
                 <jkube.recreate>true</jkube.recreate>
@@ -200,7 +201,7 @@
                     <plugin>
                         <groupId>com.kiwigrid</groupId>
                         <artifactId>helm-maven-plugin</artifactId>
-                        <version>${helm.maven.version}</version>
+                        <version>${helm-maven-plugin.version}</version>
                         <configuration>
                             <chartVersion>${docker.tag}</chartVersion>
                             <chartDirectory>${project.basedir}</chartDirectory>
@@ -236,7 +237,7 @@
                             </execution>
                         </executions>
                     </plugin>
-<!---->
+                    <!---->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-dependency-plugin</artifactId>
