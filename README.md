@@ -14,6 +14,8 @@
 - I have decided to do testing only in the GotService. The reason is that the Controller delegates in the service and only does 2 things: validate api version and return the date with and http status wrapeed into a ResponseEntity, quite a standard thing nowadays. So saying that I have considered that is not needed to test the Controller status responses
 
 
+- I have decided to not use or implement any DDBB to store data since it was not mentioend in the assignment text. However it would be quite easy being a Spring Boot app. Just adding spring-data-cassandra (for exmaple) as a dependency, then create a Repository interface/Class and defining a model class with the proper annotation and spinning a cassandra server via docker and should be practically done
+
 ##Extras thing done or half-done or ideas.
 
 - I have implemented a kubernetes profile in the pom. With that profile we could compile the app, create a docker image out of it and upload it to dockerhub, as well as create a helm chart and upload it to our chartmuseum repository. In that way we will be ready to deploy easily in kubernetes that can be spin up with a few clicks in AWS, Google, Azure or ouw own k8s cluster
